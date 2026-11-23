@@ -1,0 +1,43 @@
+# 2.10 对照实验实测输出
+# 环境：Python 3.13.13 / a2a-sdk 1.3.1 / fastmcp 4.2.0 / langchain-mcp-adapters 0.3.2
+# 说明：多行日志的换行做了整理，数值、顺序、措辞均未改动；uuid 每次运行会变化。
+
+============ 路线 A：A2A 服务端（:9995）+ 两轮客户端 ============
+
+$ uv run python article02_hello/currency_a2a_server.py     # 终端 1
+$ uv run python article02_hello/currency_a2a_client.py     # 终端 2
+
+发现智能体: Currency Agent (A2A route)，技能: ['convert_currency']
+
+--- 第 1 轮：信息不全，服务端应追问 ---
+用户: 帮我换算 100 美元
+  [task]          id=3d140daf… state=TASK_STATE_SUBMITTED
+  [status_update] TASK_STATE_WORKING | 正在解析金额与币种…
+  [status_update] TASK_STATE_INPUT_REQUIRED | 收到 100 USD，请告诉我要换成哪种货币（CNY / EUR / JPY / GBP / HKD）。
+
+--- 第 2 轮：带同一个 taskId 续聊 ---
+用户: 换成人民币
+  [status_update] TASK_STATE_WORKING | 正在解析金额与币种…
+  [artifact_update] name=conversion_result | 100 USD ≈ 708 CNY（汇率 7.08，演示数据 as_of 2026-11-20）
+  [status_update] TASK_STATE_COMPLETED | 换算完成
+
+
+============ 路线 B：MCP 工具（stdio）+ provider_env 客户端 ============
+
+$ uv run --project article03_agents/provider_env python article02_hello/currency_mcp_client.py
+
+# 实测提示：本版本的适配器每次 get_tools / ainvoke 都会新起一个 stdio 服务进程，
+# 下面出现 4 次 "Starting MCP server"（1 次取工具 + 3 次调用）。
+[INFO] Starting MCP server 'currency-tools' with transport 'stdio'   ×4
+[WARNING] Invalid arguments for tool 'convert_currency': {'error_count': 1, 'error_types': ['missing_argument']}
+
+MCP 工具列表: ['convert_currency']
+
+--- 调用 1：参数齐全 ---
+[{'type': 'text', 'text': '{"status":"ok","amount":100.0,"from_currency":"USD","to_currency":"CNY","rate":7.08,"converted":708.0,"as_of":"2026-11-20","note":"虚构演示数据，仅用于 A2A 与 MCP 的协议对照实验，不代表真实汇率"}', 'id': 'lc_1c0a9552-…'}]
+
+--- 调用 2：币种不受支持 ---
+[{'type': 'text', 'text': '{"status":"error","message":"不支持的币种：USD → XXX，可选：[\'CNY\', \'EUR\', \'GBP\', \'HKD\', \'JPY\', \'USD\']"}', 'id': 'lc_032c82b2-…'}]
+
+--- 调用 3：少传参数（没有 input_required，直接是调用失败） ---
+[{'type': 'text', 'text': "1 validation error for call[convert_currency]\nto_currency\n  Missing required argument [type=missing_argument, input_value={'amount': 100, 'from_currency': 'USD'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.14/v/missing_argument", 'id': 'lc_2d7fd7fd-…'}]

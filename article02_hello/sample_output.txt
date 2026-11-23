@@ -1,0 +1,115 @@
+发现智能体: Hello World Agent v0.0.1
+技能: ['echo_bot']
+
+--- 非流式 message/send ---
+task {
+  id: "f05452ca-8662-47a8-ba42-06a873507465"
+  context_id: "bbc71d66-5be0-4736-8f61-7fc1526e607f"
+  status {
+    state: TASK_STATE_COMPLETED
+    message {
+      message_id: "02313150-fd18-41e6-86b4-78cff5b7ef82"
+      role: ROLE_AGENT
+      parts {
+        text: "Request is completed!"
+      }
+    }
+    timestamp {
+      seconds: 1794926008
+      nanos: 759955000
+    }
+  }
+  artifacts {
+    artifact_id: "b2884caa-ac2f-4238-9e9f-0efb7d2dab84"
+    parts {
+      text: "Hello, World! I have received your request (Hi there!)"
+      media_type: "text/plain"
+    }
+  }
+  history {
+    message_id: "174f3113-fec0-4aa1-9d4e-335d9168c8ba"
+    context_id: "bbc71d66-5be0-4736-8f61-7fc1526e607f"
+    task_id: "f05452ca-8662-47a8-ba42-06a873507465"
+    role: ROLE_USER
+    parts {
+      text: "Hi there!"
+    }
+  }
+  history {
+    message_id: "a9606bc5-9699-4d19-929e-eeda91462a30"
+    role: ROLE_AGENT
+    parts {
+      text: "Processing request..."
+    }
+  }
+}
+
+
+--- 流式 message/stream ---
+task {
+  id: "277616f7-151b-4bae-8171-2b8c12e139b2"
+  context_id: "2f44aa12-fa5b-4513-ba57-2b7052a6237f"
+  status {
+    state: TASK_STATE_SUBMITTED
+  }
+  history {
+    message_id: "133c2b16-2d99-4e09-9376-0441eabf12a0"
+    context_id: "2f44aa12-fa5b-4513-ba57-2b7052a6237f"
+    task_id: "277616f7-151b-4bae-8171-2b8c12e139b2"
+    role: ROLE_USER
+    parts {
+      text: "Hi there!"
+    }
+  }
+}
+
+status_update {
+  task_id: "277616f7-151b-4bae-8171-2b8c12e139b2"
+  context_id: "2f44aa12-fa5b-4513-ba57-2b7052a6237f"
+  status {
+    state: TASK_STATE_WORKING
+    message {
+      message_id: "985ff5e2-33bf-4782-8fbc-d4b66f7e94ed"
+      role: ROLE_AGENT
+      parts {
+        text: "Processing request..."
+      }
+    }
+    timestamp {
+      seconds: 1794926008
+      nanos: 783278000
+    }
+  }
+}
+
+artifact_update {
+  task_id: "277616f7-151b-4bae-8171-2b8c12e139b2"
+  context_id: "2f44aa12-fa5b-4513-ba57-2b7052a6237f"
+  artifact {
+    artifact_id: "0d6ae486-5297-487e-b443-7aeef0759e18"
+    parts {
+      text: "Hello, World! I have received your request (Hi there!)"
+      media_type: "text/plain"
+    }
+  }
+}
+
+status_update {
+  task_id: "277616f7-151b-4bae-8171-2b8c12e139b2"
+  context_id: "2f44aa12-fa5b-4513-ba57-2b7052a6237f"
+  status {
+    state: TASK_STATE_COMPLETED
+    message {
+      message_id: "ba61573e-5dba-4b88-a0a0-10f100bc8a93"
+      role: ROLE_AGENT
+      parts {
+        text: "Request is completed!"
+      }
+    }
+    timestamp {
+      seconds: 1794926008
+      nanos: 783473000
+    }
+  }
+}
+

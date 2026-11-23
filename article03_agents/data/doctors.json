@@ -1,0 +1,82 @@
+[
+  {
+    "id": "DOC001",
+    "name": "王建国",
+    "specialty": "心内科",
+    "city": "北京",
+    "hospital": "仁和纪念医院",
+    "phone": "010-5550-0001",
+    "years_experience": 18,
+    "in_network": true
+  },
+  {
+    "id": "DOC002",
+    "name": "李慧敏",
+    "specialty": "心理科",
+    "city": "北京",
+    "hospital": "安宁心理健康中心",
+    "phone": "010-5550-0002",
+    "years_experience": 12,
+    "in_network": true
+  },
+  {
+    "id": "DOC003",
+    "name": "陈志强",
+    "specialty": "皮肤科",
+    "city": "上海",
+    "hospital": "浦江皮肤专科医院",
+    "phone": "021-5550-0003",
+    "years_experience": 15,
+    "in_network": true
+  },
+  {
+    "id": "DOC004",
+    "name": "赵雅芳",
+    "specialty": "产科",
+    "city": "广州",
+    "hospital": "越秀妇幼保健院",
+    "phone": "020-5550-0004",
+    "years_experience": 20,
+    "in_network": true
+  },
+  {
+    "id": "DOC005",
+    "name": "刘明轩",
+    "specialty": "内分泌科",
+    "city": "杭州",
+    "hospital": "西湖综合医院",
+    "phone": "0571-5550-0005",
+    "years_experience": 10,
+    "in_network": false
+  },
+  {
+    "id": "DOC006",
+    "name": "孙丽娟",
+    "specialty": "心理科",
+    "city": "成都",
+    "hospital": "锦城心理咨询中心",
+    "phone": "028-5550-0006",
+    "years_experience": 9,
+    "in_network": true
+  },
+  {
+    "id": "DOC007",
+    "name": "周国栋",
+    "specialty": "心内科",
+    "city": "上海",
+    "hospital": "浦东心脏中心",
+    "phone": "021-5550-0007",
+    "years_experience": 22,
+    "in_network": true
+  },
+  {
+    "id": "DOC008",
+    "name": "吴晓燕",
+    "specialty": "皮肤科",
+    "city": "深圳",
+    "hospital": "南山人民医院",
+    "phone": "0755-5550-0008",
+    "years_experience": 8,
+    "in_network": false
+  }
+]
