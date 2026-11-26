@@ -1,4 +1,4 @@
-"""篇二：Hello A2A 服务端（a2a-sdk 1.3.1）
+"""Hello A2A 服务端（第二篇；第三篇复用，a2a-sdk 1.3.1）
 
 参考 a2a-samples/samples/python/agents/helloworld，用最新 SDK 重写。
 运行：uv run python article02_hello/server.py
@@ -52,7 +52,7 @@ request_handler = DefaultRequestHandler(
     agent_card=public_agent_card,
 )
 
-# 4. 路由：Agent Card 发现路由 + JSON-RPC 方法路由（message/send、message/stream 等）
+# 4. 路由：Agent Card 发现路由 + JSON-RPC 方法路由（SendMessage、SendStreamingMessage 等）
 routes = []
 routes.extend(create_agent_card_routes(public_agent_card))
 routes.extend(create_jsonrpc_routes(request_handler, '/'))

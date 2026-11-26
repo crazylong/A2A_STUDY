@@ -1,20 +1,23 @@
-"""篇四：PolicyAgent 的 Agent Stack 版本。
+"""PolicyAgent 的 Agent Stack 版本（第八篇《AgentStack平台适配》、第九篇《AgentStack兼容性与故障排查》）。
 
-与篇三的区别：
+与第五至七篇使用的 A2A v1.0 代码相比，主要区别：
 - 不再自己管 LLM 密钥/端点，而是向平台申请 LLM 扩展（LLMServiceExtensionSpec），
   由 Agent Stack 统一提供模型推理（llm_fulfillments 里带 api_base/api_key/api_model）
 - 用 agentstack_sdk.Server 包装，注册名 PolicyAgent，供平台发现与调用
 
 注意版本事实（2026-11 实测）：agentstack-sdk 0.7.1 依赖 a2a-sdk 0.3.24（v0.3 协议），
-尚未跟进 A2A v1.0。因此本目录是独立环境，与篇三的 v1.0 代码不混用。
+尚未跟进 A2A v1.0。因此本目录是独立环境，与第五至七篇的 v1.0 代码不混用。
 
 本地运行（不接平台时 LLM 扩展不可用，会提示需要平台）：
-  uv run --project article04_agentstack/policy_agent server
+  uv run --project article05_agentstack/policy_agent server
 """
 
+import asyncio
 import os
 from pathlib import Path
 from typing import Annotated
+
+import httpx
 
 from a2a.types import Message
 from a2a.utils.message import get_message_text
@@ -37,6 +40,34 @@ SYSTEM_PROMPT = (
 )
 
 server = Server()
+_llm_clients: dict[tuple[str, str, str], AsyncOpenAI] = {}
+_llm_lock = asyncio.Lock()
+
+
+async def _get_llm_client(api_base: str, api_key: str, api_model: str) -> AsyncOpenAI:
+    key = (api_base, api_key, api_model)
+    async with _llm_lock:
+        client = _llm_clients.get(key)
+        if client is not None:
+            return client
+        old_clients = [
+            old
+            for old_key, old in _llm_clients.items()
+            if old_key != key
+        ]
+        _llm_clients.clear()
+        client = AsyncOpenAI(
+            base_url=api_base,
+            api_key=api_key,
+            max_retries=2,
+            http_client=httpx.AsyncClient(
+                trust_env=False, timeout=httpx.Timeout(120.0)
+            ),
+        )
+        _llm_clients[key] = client
+    for old in old_clients:
+        await old.close()
+    return client
 
 
 @server.agent(name='PolicyAgent')
@@ -45,7 +76,7 @@ async def policy_agent(
     context: RunContext,
     llm: Annotated[
         LLMServiceExtensionServer,
-        # 不指定具体模型：由平台侧的模型提供方配置决定（本文使用百炼 OpenAI 兼容端点；
+        # 不指定具体模型：由平台侧的模型提供方配置决定（可接百炼等 OpenAI 兼容端点；
         # agentstack-cli 0.7.1 对百炼的原生支持以 `agentstack model add` 实际选项为准）
         LLMServiceExtensionSpec.single_demand(),
     ],
@@ -62,9 +93,15 @@ async def policy_agent(
         )
         return
 
-    client = AsyncOpenAI(
-        base_url=fulfillment.api_base, api_key=fulfillment.api_key
+    client = await _get_llm_client(
+        fulfillment.api_base,
+        fulfillment.api_key,
+        fulfillment.api_model,
     )
+    # 平台下发的可能是非 Qwen 模型；只有模型名含 qwen 时才发送该参数
+    kwargs = {}
+    if 'qwen' in (fulfillment.api_model or '').lower():
+        kwargs['extra_body'] = {'enable_thinking': False}
     resp = await client.chat.completions.create(
         model=fulfillment.api_model,
         messages=[
@@ -72,6 +109,7 @@ async def policy_agent(
             {'role': 'system', 'content': f'保单内容：\n{POLICY_TEXT}'},
             {'role': 'user', 'content': prompt},
         ],
+        **kwargs,
     )
     yield AgentMessage(text=resp.choices[0].message.content or 'I don\'t know')
 
@@ -93,11 +131,17 @@ def run():
 
     host = os.environ.get('HOST', '0.0.0.0')
     port = int(os.environ.get('PORT', '8000'))
+    # HOST 只决定监听；名片必须用外部可达地址，不能广播 0.0.0.0
+    public_url = os.environ.get('PUBLIC_URL', '').rstrip('/')
+    if not public_url:
+        public_url = f'http://127.0.0.1:{port}'
 
     context_store = InMemoryContextStore()
+    # 注意：_agent_factory 是 SDK 私有 API，升级后需复核；
+    # 平台托管模式由平台注入启动方式，不走这里。
     agent = server._agent_factory(context_store.modify_dependencies)
-    agent.card.url = f'http://{host}:{port}'
-    app = create_app(agent)
+    agent.card.url = public_url
+    app = create_app(agent)          # 不传 auth_backend，绕开 SDK bug
     uvicorn.run(app, host=host, port=port)
 
 

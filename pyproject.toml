@@ -16,4 +16,4 @@ dependencies = [
 
 [tool.uv.workspace]
 members = []
-exclude = ["article03_agents/provider_env", "article04_agentstack/policy_agent"]
+exclude = ["article04_agents/provider_env", "article05_agentstack/policy_agent"]

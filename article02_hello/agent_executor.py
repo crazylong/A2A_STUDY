@@ -1,4 +1,4 @@
-"""篇二：HelloWorldAgentExecutor —— 业务逻辑与 A2A 任务生命周期的桥梁。
+"""HelloWorldAgentExecutor —— 业务逻辑与 A2A 任务生命周期的桥梁（第二篇；第三篇复用）。
 
 execute() 的五步就是 A2A 服务端的核心套路：
 建 Task → 报 working → 干活 → 产 Artifact → 报 completed
@@ -13,11 +13,11 @@ from a2a.helpers import (
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
-from a2a.types import TaskState
+from a2a.types import TaskNotCancelableError, TaskState
 
 
 class HelloWorldAgent:
-    """真正的"智能体"。这里不调 LLM，所以本篇不需要任何 API Key。"""
+    """真正的"智能体"。这里不调 LLM，所以 Hello A2A 示例无需任何 API Key。"""
 
     async def invoke(self, user_request: str) -> str:
         return f'Hello, World! I have received your request ({user_request})'
@@ -73,4 +73,4 @@ class HelloWorldAgentExecutor(AgentExecutor):
     async def cancel(
         self, context: RequestContext, event_queue: EventQueue
     ) -> None:
-        raise NotImplementedError('Cancel is not supported.')
+        raise TaskNotCancelableError('Cancel is not supported.')

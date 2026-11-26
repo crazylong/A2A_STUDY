@@ -1,4 +1,4 @@
-"""篇二：A2A 客户端演示（a2a-sdk 1.3.1）
+"""Hello A2A 客户端演示（第二篇；第三篇复用，a2a-sdk 1.3.1）
 
 依次演示：发现 Agent Card → 非流式调用 → 流式调用。
 运行：uv run python article02_hello/client.py
@@ -30,7 +30,7 @@ async def get_agent_card():
 
 
 async def send_message(card, text_query: str, streaming: bool):
-    """第二/三步：发消息。streaming 决定走 message/send 还是 message/stream。"""
+    """第二/三步：发消息。streaming 决定走 SendMessage 还是 SendStreamingMessage。"""
     # 注入 trust_env=False 的 httpx 客户端，避免系统代理配置干扰本机直连
     async with httpx.AsyncClient(trust_env=False) as httpx_client:
         client = await create_client(
@@ -42,7 +42,7 @@ async def send_message(card, text_query: str, streaming: bool):
         message = new_text_message(text_query, role=Role.ROLE_USER)
         request = SendMessageRequest(message=message)
 
-        mode = '流式 message/stream' if streaming else '非流式 message/send'
+        mode = '流式 SendStreamingMessage' if streaming else '非流式 SendMessage'
         print(f'\n--- {mode} ---')
         async for chunk in client.send_message(request):
             # 每个 chunk 是 StreamResponse：task / message / status_update / artifact_update 四选一

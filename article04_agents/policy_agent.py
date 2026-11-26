@@ -1,9 +1,9 @@
-"""篇三：PolicyAgent —— 保单问答智能体（纯 a2a-sdk + LLM）。
+"""第六篇《跨框架智能体接入》：PolicyAgent —— 保单问答智能体（纯 a2a-sdk + LLM）。
 
 对应课程 04~05 课：先有一个 QA 智能体，再包成 A2A Server。
 这里 QA 逻辑 = 把虚构保单全文放进系统提示，让 LLM 据此回答。
 
-运行：uv run python article03_agents/policy_agent.py
+运行：uv run python article04_agents/policy_agent.py
 """
 
 from pathlib import Path
@@ -11,7 +11,7 @@ from pathlib import Path
 from a2a.types import AgentSkill
 
 from a2a_helpers import serve
-from common import PORTS, chat
+from common import PORTS, chat, close_llm_client
 
 POLICY_TEXT = (Path(__file__).parent / 'data' / 'sample_policy.md').read_text(
     encoding='utf-8'
@@ -43,4 +43,5 @@ if __name__ == '__main__':
         ),
         fn=answer,
         port=PORTS['policy'],
+        on_shutdown=close_llm_client,
     )

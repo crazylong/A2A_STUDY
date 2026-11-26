@@ -1,11 +1,11 @@
-# 2.10 对照实验实测输出
+# 第四篇《同一能力，A2A与MCP两种接法》对照实验实测输出
 # 环境：Python 3.13.13 / a2a-sdk 1.3.1 / fastmcp 4.2.0 / langchain-mcp-adapters 0.3.2
 # 说明：多行日志的换行做了整理，数值、顺序、措辞均未改动；uuid 每次运行会变化。
 
-============ 路线 A：A2A 服务端（:9995）+ 两轮客户端 ============
+============ 路线 A：A2A 服务端（:9995）+ 客户端 ============
 
-$ uv run python article02_hello/currency_a2a_server.py     # 终端 1
-$ uv run python article02_hello/currency_a2a_client.py     # 终端 2
+$ uv run python article03_compare/currency_a2a_server.py     # 终端 1
+$ uv run python article03_compare/currency_a2a_client.py     # 终端 2
 
 发现智能体: Currency Agent (A2A route)，技能: ['convert_currency']
 
@@ -21,10 +21,19 @@ $ uv run python article02_hello/currency_a2a_client.py     # 终端 2
   [artifact_update] name=conversion_result | 100 USD ≈ 708 CNY（汇率 7.08，演示数据 as_of 2026-11-20）
   [status_update] TASK_STATE_COMPLETED | 换算完成
 
+--- 第 3 轮：GetTask 回查 + CancelTask 取消 ---
+用户: 帮我换算 100 美元
+  [task]          id=00899427… state=TASK_STATE_SUBMITTED
+  [status_update] TASK_STATE_WORKING | 正在解析金额与币种…
+  [status_update] TASK_STATE_INPUT_REQUIRED | 收到 100 USD，请告诉我要换成哪种货币（CNY / EUR / JPY / GBP / HKD）。
+  [get_task]      state=TASK_STATE_INPUT_REQUIRED
+  [cancel_task]   state=TASK_STATE_CANCELED
+  [cancel_task]   二次取消被拒绝：TaskNotCancelableError: Task cannot be canceled
+
 
 ============ 路线 B：MCP 工具（stdio）+ provider_env 客户端 ============
 
-$ uv run --project article03_agents/provider_env python article02_hello/currency_mcp_client.py
+$ uv run --project article04_agents/provider_env python article03_compare/currency_mcp_client.py
 
 # 实测提示：本版本的适配器每次 get_tools / ainvoke 都会新起一个 stdio 服务进程，
 # 下面出现 4 次 "Starting MCP server"（1 次取工具 + 3 次调用）。

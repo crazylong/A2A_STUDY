@@ -1,6 +1,6 @@
-"""篇二 2.10 路线 A：把汇率换算包装成 A2A 智能体。
+"""第四篇 路线 A：把汇率换算包装成 A2A 智能体。
 
-与 2.3 的 HelloWorldAgentExecutor 同一套路，只是业务从"回显"换成"换算"，
+与第二篇《从零跑通Hello A2A》的 HelloWorldAgentExecutor 同一套路，只是业务从"回显"换成"换算"，
 并通过 TASK_STATE_INPUT_REQUIRED 展示多轮追问。
 """
 
@@ -13,7 +13,7 @@ from a2a.helpers import (
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
-from a2a.types import Role, TaskState
+from a2a.types import Role, TaskNotCancelableError, TaskState
 
 from currency_core import convert, parse_request
 
@@ -117,4 +117,21 @@ class CurrencyAgentExecutor(AgentExecutor):
     async def cancel(
         self, context: RequestContext, event_queue: EventQueue
     ) -> None:
-        raise NotImplementedError('Cancel is not supported.')
+        """把挂起中的任务取消；已终态或不存在时返回协议错误。"""
+        task = context.current_task
+        terminal = {
+            TaskState.TASK_STATE_COMPLETED,
+            TaskState.TASK_STATE_FAILED,
+            TaskState.TASK_STATE_CANCELED,
+            TaskState.TASK_STATE_REJECTED,
+        }
+        if task is None or task.status.state in terminal:
+            raise TaskNotCancelableError(
+                f'Task {context.task_id} is not cancelable'
+            )
+        updater = TaskUpdater(
+            event_queue=event_queue,
+            task_id=task.id,
+            context_id=task.context_id,
+        )
+        await updater.cancel(message=new_text_message('用户取消了换算任务'))

@@ -1,7 +1,7 @@
-"""篇二 2.10 路线 B：MCP 客户端（provider_env：mcp 1.x + langchain-mcp-adapters）
+"""第四篇 路线 B：MCP 客户端（provider_env：mcp 1.x + langchain-mcp-adapters）
 
 运行：
-    uv run --project article03_agents/provider_env python article02_hello/currency_mcp_client.py
+    uv run --project article04_agents/provider_env python article03_compare/currency_mcp_client.py
 
 这里直接调用工具、不接 LLM：换成 function calling 只是把"谁来选工具"交给模型，
 工具侧的交互形态（一次请求 → 一段结果，无任务对象）不变。
@@ -14,7 +14,7 @@ from pathlib import Path
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 HERE = Path(__file__).resolve().parent
-# fastmcp 4.x 在主环境，provider_env 只负责当客户端（依赖冲突见篇三 5.3）。
+# fastmcp 4.x 在主环境，provider_env 只负责当客户端（依赖冲突见第六篇的依赖隔离小节）。
 # 支持 A2A_MAIN_PYTHON 显式指定；默认依次找 .venv、a2a-study 两种环境目录
 MAIN_PYTHON = os.environ.get('A2A_MAIN_PYTHON') or next(
     (

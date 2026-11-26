@@ -1,4 +1,4 @@
-"""篇三：医生名录 MCP 服务（FastMCP）。
+"""第六篇《跨框架智能体接入》：医生名录 MCP 服务（FastMCP）。
 
 ProviderAgent 的"内部工具层"：只暴露一个 list_doctors 工具。
 由 provider_agent.py 通过 stdio 自动拉起，一般不需要单独运行。

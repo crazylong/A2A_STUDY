@@ -1,6 +1,6 @@
-"""篇二 2.10 路线 A：汇率 A2A 服务端（a2a-sdk 1.3.1，:9995）
+"""第四篇 路线 A：汇率 A2A 服务端（a2a-sdk 1.3.1，:9995）
 
-运行：uv run python article02_hello/currency_a2a_server.py
+运行：uv run python article03_compare/currency_a2a_server.py
 """
 
 import uvicorn
@@ -27,7 +27,7 @@ skill = AgentSkill(
 
 public_agent_card = AgentCard(
     name='Currency Agent (A2A route)',
-    description='2.10 对照实验：同一换算能力的 A2A 接法',
+    description='A2A 与 MCP 同一能力对照实验',
     version='1.0.0',
     default_input_modes=['text/plain'],
     default_output_modes=['text/plain'],

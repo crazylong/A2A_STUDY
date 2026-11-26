@@ -1,7 +1,7 @@
-"""篇二 2.10 路线 B：同一换算能力的 MCP 接法（FastMCP，stdio）。
+"""第四篇 路线 B：同一换算能力的 MCP 接法（FastMCP，stdio）。
 
 运行方式由 MCP 客户端以子进程拉起：
-    .venv/bin/python article02_hello/currency_mcp_server.py
+    .venv/bin/python article03_compare/currency_mcp_server.py
 """
 
 from fastmcp import FastMCP

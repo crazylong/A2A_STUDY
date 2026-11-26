@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "policy-agent"
 version = "0.1.0"
-description = "Agent Stack 版保单问答智能体（A2A 学习专栏篇四）"
+description = "A2A 学习专栏 Agent Stack 版 PolicyAgent"
 requires-python = ">=3.13"
 dependencies = [
     "agentstack-sdk==0.7.1",
