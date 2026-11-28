@@ -26,13 +26,15 @@
 
 | 环境 | 关键依赖 | 用途 |
 | --- | --- | --- |
-| 主环境（本目录，可命名 `a2a-study`） | a2a-sdk 1.3.1 / fastmcp 4.2.0 / google-adk 2.14.1 / openai 2.x | 第二至四篇，以及第五至七篇的大部分代码 |
-| `article04_agents/provider_env` | mcp 1.x / langchain-mcp-adapters / langgraph 1.2.x | 第四篇 MCP 客户端、第六篇 ProviderAgent、第七篇 Provider 节点（与 fastmcp 4.x 的 mcp 2.x 依赖冲突，故隔离） |
+| 主环境（本目录，可命名 `a2a-study`） | a2a-sdk 1.3.1 / fastmcp 3.4.11 / mcp 1.30 / google-adk 2.14.1 / openai 2.x | 第二至四篇，以及第五至七篇的大部分代码 |
+| `article04_agents/provider_env` | fastmcp 3.4.11 / mcp 1.x / langchain-mcp-adapters 0.3.2 / langgraph 1.2.x | 第四篇 MCP 服务端与客户端、第六篇 ProviderAgent、第七篇 Provider 节点（与主环境隔离，原因是 ADK 把主环境钉在 `openai<3`） |
 | `article05_agentstack/policy_agent` | agentstack-sdk 0.7.1（钉住 a2a-sdk 0.3.24，v0.3 协议） | 第八、九篇 Agent Stack 版智能体 |
 
 Python 统一 3.13（最新补丁版），用 [uv](https://docs.astral.sh/uv/) 管理。
 主环境默认是 `.venv`；若把环境命名为 `a2a-study`，可 `ln -s a2a-study .venv`，
 或设置 `A2A_MAIN_PYTHON=/path/to/a2a-study/bin/python`（供 MCP 子进程拉起时使用）。
+
+> **MCP 版本口径**：仓库里所有 MCP 代码固定在 **mcp 1.x 协议代**（`fastmcp==3.4.11` + `langchain-mcp-adapters 0.3.2`）。这**不是最新写法**——MCP 2026-07-28 修订把会话改成无状态：服务端不能再在调用中途反向下发 elicitation 请求，只能随 `InputRequiredResult.inputRequests` 返回、由客户端补齐后重发（能力还在，通道变了）。这里刻意不追新：本仓库要讲的是 **A2A 与 MCP 的交互模型差异**，两端固定在同一协议代才能共用一份客户端代码、拿同一份输出做对照；换成新协议会让读者把注意力花在 MCP 自身的版本演进上，而这与 A2A/MCP 的区别无关。要迁新版，见 FastMCP 的升级说明与 `langchain.mcp` 的迁移指南。
 
 ## 准备
 
@@ -112,9 +114,12 @@ uv run python article03_compare/currency_a2a_client.py     # 终端 2
 
 # 路线 B：MCP（客户端跑在 provider_env，服务由主环境 Python 以 stdio 拉起）
 uv run --project article04_agents/provider_env python article03_compare/currency_mcp_client.py
+
+# 补充：MCP Elicitation（一次调用中追问目标币种）
+printf 'CNY\n' | uv run --project article04_agents/provider_env python article03_compare/currency_mcp_elicitation_client.py
 ```
 
-两条路线的实测输出见 `article03_compare/currency_compare_output.txt`。
+两条路线的实测输出见 `article03_compare/currency_compare_output.txt`。Elicitation 案例复用同一份汇率逻辑，但额外要求客户端注册用户输入回调；它演示调用内补参数，不是跨请求 Tasks 生命周期。
 汇率取自 `article03_compare/currency_rates.json`，为虚构演示数据，不联网。
 
 ## 第五篇：A2A通用服务底座
@@ -204,7 +209,7 @@ curl --noproxy '*' -X POST http://127.0.0.1:8000/v1/message:send \
 bash scripts/verify_all.sh
 ```
 
-覆盖：全量编译、`scripts/verify_client_contract.py`、`scripts/verify_dispatch_report.py`、第二篇 Hello、第四篇 A2A 的续聊 `INPUT_REQUIRED → COMPLETED`、另一任务 `INPUT_REQUIRED → CANCELED` 与二次取消失败、第四篇 MCP 工具路线。客户端契约覆盖 `COMPLETED+Artifact`、直接 `ROLE_AGENT` Message、非流式 `return_immediately` 非终态、`FAILED`、`INPUT_REQUIRED`、直接 `ROLE_USER`、`COMPLETED` 但只有状态消息且无 Artifact、非文本或纯空白 Artifact 等拒绝路径；分发契约覆盖冷/热缓存、部分失败报告、退出码 0/1/2 与异常脱敏。脚本直接调用两个 venv 的 Python，检查服务端口关闭；失败会非零退出，并在 `/tmp/a2a_verify_*.log` 留输出。
+覆盖：全量编译、`scripts/verify_client_contract.py`、`scripts/verify_dispatch_report.py`、第二篇 Hello、第四篇 A2A 的续聊 `INPUT_REQUIRED → COMPLETED`、另一任务 `INPUT_REQUIRED → CANCELED` 与二次取消失败、第四篇 MCP 普通工具路线、MCP Elicitation 的调用内追问与正常返回。客户端契约覆盖 `COMPLETED+Artifact`、直接 `ROLE_AGENT` Message、非流式 `return_immediately` 非终态、`FAILED`、`INPUT_REQUIRED`、直接 `ROLE_USER`、`COMPLETED` 但只有状态消息且无 Artifact、非文本或纯空白 Artifact 等拒绝路径；分发契约覆盖冷/热缓存、部分失败报告、退出码 0/1/2 与异常脱敏。脚本直接调用两个 venv 的 Python，检查服务端口关闭；失败会非零退出，并在 `/tmp/a2a_verify_*.log` 留输出。
 第六、七篇真实 LLM 编排需先完成 `.env` 配置，再运行 `run_all.sh` + `demo_client.py`。
 
 ## 目录结构
@@ -220,6 +225,8 @@ A2A_STUDY/
 │   └── verify_all.sh          # 无 LLM 回归
 ├── article02_hello/           # 第二篇；第三篇复用：最小服务端/客户端
 ├── article03_compare/         # 第四篇：同一能力的 A2A / MCP 两条接法
+│   ├── currency_mcp_elicitation_server.py # MCP 调用内追问
+│   └── currency_mcp_elicitation_client.py # 终端 elicitation 回调
 ├── article04_agents/          # 第五至七篇：公共底座、跨框架智能体与导诊编排
 │   ├── common.py              # 第五篇：环境、地址与 LLM 工厂
 │   ├── a2a_helpers.py         # 第五篇：A2A 服务端公共封装

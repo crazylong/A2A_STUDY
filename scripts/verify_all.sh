@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 无 LLM 回归：编译检查 + 客户端/分发契约 + Hello + A2A 全生命周期 + MCP 工具路线。
+# 无 LLM 回归：编译检查 + 客户端/分发契约 + Hello + A2A 全生命周期 + MCP 工具与 Elicitation。
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -90,5 +90,12 @@ echo "== 6. 第四篇 MCP 路线 =="
 "$PROVIDER_PYTHON" article03_compare/currency_mcp_client.py > /tmp/a2a_verify_mcp.log 2>&1
 grep -q 'MCP 工具列表' /tmp/a2a_verify_mcp.log
 grep -q '"status":"ok"' /tmp/a2a_verify_mcp.log
+
+echo "== 7. 第四篇 MCP Elicitation 路线 =="
+printf 'CNY\n' | "$PROVIDER_PYTHON" article03_compare/currency_mcp_elicitation_client.py > /tmp/a2a_verify_mcp_elicitation.log 2>&1
+grep -q '\[elicitation\]' /tmp/a2a_verify_mcp_elicitation.log
+grep -q '用户选择: CNY' /tmp/a2a_verify_mcp_elicitation.log
+grep -q '"status":"ok"' /tmp/a2a_verify_mcp_elicitation.log
+grep -q '"to_currency":"CNY"' /tmp/a2a_verify_mcp_elicitation.log
 
 echo "全部通过。输出在 /tmp/a2a_verify_*.log"

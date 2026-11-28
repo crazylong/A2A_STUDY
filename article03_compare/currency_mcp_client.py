@@ -1,40 +1,29 @@
-"""第四篇 路线 B：MCP 客户端（provider_env：mcp 1.x + langchain-mcp-adapters）
+"""第四篇 路线 B：MCP 客户端（provider_env：fastmcp 3.x + adapters 0.3.2，同为 mcp 1.x）
 
 运行：
     uv run --project article04_agents/provider_env python article03_compare/currency_mcp_client.py
 
+服务端与客户端在同一个环境里，stdio 子进程直接用当前解释器拉起。
 这里直接调用工具、不接 LLM：换成 function calling 只是把"谁来选工具"交给模型，
 工具侧的交互形态（一次请求 → 一段结果，无任务对象）不变。
 """
 
 import asyncio
-import os
+import sys
 from pathlib import Path
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 HERE = Path(__file__).resolve().parent
-# fastmcp 4.x 在主环境，provider_env 只负责当客户端（依赖冲突见第六篇的依赖隔离小节）。
-# 支持 A2A_MAIN_PYTHON 显式指定；默认依次找 .venv、a2a-study 两种环境目录
-MAIN_PYTHON = os.environ.get('A2A_MAIN_PYTHON') or next(
-    (
-        str(HERE.parent / name / 'bin' / 'python')
-        for name in ('.venv', 'a2a-study')
-        if (HERE.parent / name / 'bin' / 'python').exists()
-    ),
-    '',
-)
-if not MAIN_PYTHON:
-    raise RuntimeError(
-        '找不到主环境 Python，请设置 A2A_MAIN_PYTHON 指向主环境解释器'
-    )
+# 服务端脚本与客户端同环境（fastmcp 3.4.11 + langchain-mcp-adapters 0.3.2 + mcp 1.30.0）
+SERVER_PYTHON = sys.executable
 
 
 async def main():
     client = MultiServerMCPClient(
         {
             'currency': {
-                'command': str(MAIN_PYTHON),
+                'command': str(SERVER_PYTHON),
                 'args': [str(HERE / 'currency_mcp_server.py')],
                 'transport': 'stdio',
             }
@@ -55,7 +44,7 @@ async def main():
         {'amount': 100, 'from_currency': 'USD', 'to_currency': 'XXX'}
     ))
 
-    print('\n--- 调用 3：少传参数（没有 input_required，直接是调用失败） ---')
+    print('\n--- 调用 3：少传参数（返回校验错误，不会挂起） ---')
     try:
         result = await tool.ainvoke({'amount': 100, 'from_currency': 'USD'})
         print(result)
